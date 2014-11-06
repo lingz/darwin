@@ -170,7 +170,7 @@ void iterate() {
   int newHash;
   srand(time(NULL));
   clock_t start = clock();
-  while ((clock() - start)/ (double) CLOCKS_PER_SEC < 110 ) {
+  while ((clock() - start)/ (double) CLOCKS_PER_SEC < 100 ) {
     onBits = buildOnBits();
     random_shuffle(onBits.begin(), onBits.end());
 

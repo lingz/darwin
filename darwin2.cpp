@@ -247,7 +247,7 @@ void makeMany(){
   }
 }
 
-vector< vector< bool > > makeBest(){
+void makeBest(){
   srand(time(NULL));
   score = 0;
   S.resize(rows, vector< int >(rows, 0));
@@ -262,7 +262,7 @@ vector< vector< bool > > makeBest(){
   vector< vector< bool > > best = canonical;
   clock_t start = clock();
   
-  while( (clock() - start)/ (double) CLOCKS_PER_SEC < 20 ){
+  while( (clock() - start)/ (double) CLOCKS_PER_SEC < 110 ){
     r1 = rand() % rows;
     r2 = rand() % rows;
     if ( r1 == r2 ){
@@ -282,9 +282,8 @@ vector< vector< bool > > makeBest(){
     }
   }
   
-  cout << "Got Best" << endl;
-
   my_print_std_out(best);
+  
 }
 
 int main(){

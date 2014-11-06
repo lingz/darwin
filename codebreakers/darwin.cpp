@@ -84,7 +84,8 @@ void my_prints(vector< vector< bool > > M){
     cout << accumulate( M[i].begin(), M[i].end(), 0) << " ";
   }
   cout << endl;
-  for ( int i = 0; i < columns; i++ ){    tot = 0;
+  for ( int i = 0; i < columns; i++ ){
+    tot = 0;
     for ( int j = 0; j < rows; j++ ){
       if ( M[j][i] ){
 	tot++;
@@ -246,7 +247,7 @@ void makeMany(){
   }
 }
 
-vector< vector< bool > > makeBest(){
+void makeBest(){
   srand(time(NULL));
   score = 0;
   S.resize(rows, vector< int >(rows, 0));
@@ -281,9 +282,8 @@ vector< vector< bool > > makeBest(){
     }
   }
   
-  cout << "Got Best" << endl;
-
   my_print_std_out(best);
+  
 }
 
 int main(){
