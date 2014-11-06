@@ -1,7 +1,10 @@
 #include <iostream>
 #include <numeric>
 #include <algorithm>
-#include <unordered_set>
+#include <set>
+#include <cmath>
+#include <cassert>
+#include <ctime>
 
 #include "edmondskarp.h"
 
@@ -73,7 +76,9 @@ int mhash(vector< vector< bool > > mat){
     for ( int j = 0; i + j < rows && j < columns; j++ ){
       s += mat[i + j][j];
     }
-    h = (h * s) % MOD;
+    if ( s ){
+      h = (h * s) % MOD;
+    }
   }
   return h;
 }
@@ -88,13 +93,43 @@ struct OnBit {
   int column;
 };
 
-// computes the current score
-int score() {
-  return 1;
+int dotprod(vector< bool > v1, vector< bool > v2){
+  int pr = 0;
+  for ( int i = 0; i < v1.size(); i++ ){
+    pr += v1[i] && v2[i];
+  }
+  return pr;
 }
 
-void iterate() {
+// computes the current score
+int score() {
+  int score = 0;
+  for ( int i = 0; i < rows; i++ ){
+    for ( int j = 0; j < rows; j++ ){
+      score += pow(dotprod(canonical[i],canonical[j]), 2);
+    }
+  }
+  return score;
+}
 
+void flip(OnBit &a, OnBit &b) {
+
+  canonical[a.row][a.column] = false;
+  canonical[b.row][b.column] = false;
+
+
+  // swap a and b
+  int temp = a.row;
+  a.row = b.row;
+  b.row = temp;
+
+
+  canonical[a.row][a.column] = true;
+  canonical[b.row][b.column] = true;
+
+}
+
+vector<OnBit> buildOnBits() {
   vector<OnBit> onBits;
   onBits.resize(totalPoints);
 
@@ -108,72 +143,107 @@ void iterate() {
       }
     }
   }
+  return onBits;
+}
 
+bool isequal(vector< vector< bool > > m1, vector< vector< bool > > m2){
+  for ( int i = 0; i < m1.size(); i++ ){
+    for ( int j = 0; j < m1[i].size(); j++ ){
+      if ( m1[i][j] != m2[i][j] ){
+	return false;
+      }
+    }
+  }
+  return true;
+}
+
+
+vector< vector< vector< bool > > > matrices[(int) (25+1e6)];
+void iterate() {
+  vector<OnBit> onBits;
   int uniqueIterations = 0;
   int lastScore;
-  int steps;
-  int MAX_STEPS = 100000;
   vector<vector< bool> > best;
-  unordered_set< vector < vector< bool > >, matrixHash> seenMatricies;
   bool is_in = false;
-  while (true) {
+  bool mustMutate = false;
+  int newScore;
+  int newHash;
+  srand(time(NULL));
+  clock_t start = clock();
+  while ((clock() - start)/ (double) CLOCKS_PER_SEC < 110 ) {
+    onBits = buildOnBits();
     random_shuffle(onBits.begin(), onBits.end());
-    steps++;
-    if (steps > MAX_STEPS) {
-      break;
-    }
 
     // 10% chance to allow going lower
-    bool canGoLower = rand() % 100 < 10;
+    bool canGoLower = rand() % 100 < 3;
+    if (mustMutate) {
+      canGoLower = true;
+      mustMutate = false;
+    }
+    bool found = false;
 
     for (int i = 0; i < totalPoints; i++) {
+      if (found) break;
       OnBit a = onBits[i];
       for (int j = 0; j < totalPoints; j++) {
+        if (j == i) continue;
         OnBit b = onBits[j];
         // check if diagonals are free
         if (!canonical[a.row][b.column] && !canonical[b.row][a.column]) {
-          // swap a and b
-          int temp = a.row;
-          a.row = b.row;
-          b.row = temp;
+          flip(a, b);
           
           // test
-          int newScore = score();
           if (isProblemA) {
-            is_in = seenMatricies.find(canonical) != seenMatricies.end();
-          }
-          if (canGoLower || newScore > lastScore &&
-              (!isProblemA || !is_in)) {
-            lastScore = newScore;
-            best = canonical;
-
-
-            // stuff specific to problem A
-            if (isProblemA) {
-              seenMatricies.insert(canonical);
-              uniqueIterations++;
-              // print output type A here
-              my_print_std_out(canonical);
-              if (uniqueIterations > 10000) {
-                // end function
-                return;
+            is_in = false;
+	    newHash = mhash(canonical);
+            for ( int i = 0; i < matrices[newHash].size(); i++ ){
+              if ( isequal(matrices[newHash][i], canonical) ){
+	        is_in = true;
               }
             }
+          } else {
+            newScore = score();
+          }
+
+          if (isProblemA) {
+	    if (is_in) {
+              flip(a,b);
+              continue;
+            }
+            // stuff specific to problem A
+            matrices[newHash].push_back(canonical);
+            uniqueIterations++;
+
+            my_print_std_out(canonical);
+            if (uniqueIterations > 10000) {
+              // end function
+              return;
+            }
             // done with current transition
+            found = true;
+            break;
+	  } else if (canGoLower || newScore > lastScore) {
+            lastScore = newScore;
+            if (newScore)  {
+              best = canonical;
+            }
+            found = true;
             break;
           } else {
-            // roll back
-            temp = a.row;
-            a.row = b.row;
-            b.row = temp;
+            flip(a,b);
           }
 
         }
       }
     }
 
-    // at end, break out
-    break;
+    // at end, break out if we didn't find anything
+    if (!isProblemA) {
+      mustMutate = true;
+    } else if (!found)  {
+      cout << "Broken" << endl;
+      break;
+    }
   }
 
   if (!isProblemA) {
@@ -184,13 +254,13 @@ void iterate() {
 
 
 void my_print_std_out(vector<vector< bool > > M) {
-  bool isFirst = false;
+  bool isFirst = true;
   for ( int i = 0; i < rows; i++ ){
     for ( int j = 0; j < columns; j++ ){
       if (!isFirst) {
         cout << " ";
       } else {
-        isFirst = true;
+        isFirst = false;
       }
       cout << M[i][j];
     }
@@ -220,17 +290,8 @@ void my_prints(vector< vector< bool > > M){
   cout << rtot << " " << ctot << endl;
 }
 
-void optimize() {
-}
-
 int main(){
   get_input();
-  
   makeCanonical();
-  
-  my_prints(canonical);
-
   iterate();
-  
-
 }
