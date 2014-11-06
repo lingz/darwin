@@ -262,7 +262,7 @@ vector< vector< bool > > makeBest(){
   vector< vector< bool > > best = canonical;
   clock_t start = clock();
   
-  while( (clock() - start)/ (double) CLOCKS_PER_SEC < 110 ){
+  while( (clock() - start)/ (double) CLOCKS_PER_SEC < 20 ){
     r1 = rand() % rows;
     r2 = rand() % rows;
     if ( r1 == r2 ){
