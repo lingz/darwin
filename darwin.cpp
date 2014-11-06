@@ -162,7 +162,7 @@ vector< vector< vector< bool > > > matrices[(int) (25+1e6)];
 void iterate() {
   vector<OnBit> onBits;
   int uniqueIterations = 0;
-  int lastScore;
+  int lastScore = 0;
   vector<vector< bool> > best;
   bool is_in = false;
   bool mustMutate = false;
@@ -180,6 +180,7 @@ void iterate() {
       canGoLower = true;
       mustMutate = false;
     }
+
     bool found = false;
 
     for (int i = 0; i < totalPoints; i++) {
@@ -188,6 +189,7 @@ void iterate() {
       for (int j = 0; j < totalPoints; j++) {
         if (j == i) continue;
         OnBit b = onBits[j];
+
         // check if diagonals are free
         if (!canonical[a.row][b.column] && !canonical[b.row][a.column]) {
           flip(a, b);
@@ -223,10 +225,10 @@ void iterate() {
             found = true;
             break;
 	  } else if (canGoLower || newScore > lastScore) {
-            lastScore = newScore;
-            if (newScore)  {
+            if (newScore > lastScore)  {
               best = canonical;
             }
+            lastScore = newScore;
             found = true;
             break;
           } else {
@@ -238,11 +240,13 @@ void iterate() {
     }
 
     // at end, break out if we didn't find anything
-    if (!isProblemA) {
-      mustMutate = true;
-    } else if (!found)  {
-      cout << "Broken" << endl;
-      break;
+    if (!found) {
+	    if (!isProblemA) {
+	      mustMutate = true;
+	    } else {
+	      cout << "Broken" << endl;
+	      break;
+	    }
     }
   }
 

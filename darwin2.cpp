@@ -2,6 +2,7 @@
 #include <numeric>
 #include <cmath>
 #include <cstdlib>
+#include <cassert>
 
 #include "edmondskarp.h"
 
@@ -167,6 +168,7 @@ int randflip( int r1, int r2 ){
 }
 
 int climb( int r1, int r2 ){
+  assert(r1 < rows); assert(r2 < rows);
   int bc1 = -1, bc2 = -1;
   int bestscore = score;
   for ( int i = 0; i < columns; i++ ){
@@ -214,10 +216,11 @@ void makeMany(){
   int total = 1;
   int hashc = mhash(canonical);
   matrices[hashc].push_back(canonical);
+  my_print_std_out(canonical);
 
   int r1, r2;
   bool issame;
-  while(total < 10001){
+  while(total < 10000){
 
     r1 = rand() % rows;
     r2 = rand() % rows;
@@ -277,8 +280,10 @@ vector< vector< bool > > makeBest(){
       bestscore = score;
       best = canonical;
     }
-    cout << bestscore << endl;
   }
+  
+  cout << "Got Best" << endl;
+
   my_print_std_out(best);
 }
 
